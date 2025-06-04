@@ -21,6 +21,11 @@ namespace StockManagement.Repositories
             return product;
         }
 
+        public Product[] GetAll()
+        {
+            return _context.Products.ToArray();
+        }
+
     }
 }
 

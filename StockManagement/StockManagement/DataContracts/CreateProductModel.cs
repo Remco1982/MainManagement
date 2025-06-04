@@ -1,6 +1,6 @@
 ﻿namespace StockManagement.DataContracts;
 
-public class Customer
+public class CreateProductModel
 {
     public required string Name { get; set; }
     public required string Description { get; set; }
