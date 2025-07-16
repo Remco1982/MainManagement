@@ -1,0 +1,12 @@
+<div class="customer-list">
+    <app-customer></app-customer>
+
+  <h2>Customer List</h2>
+  <ul>
+    <li *ngFor="let customer of customers">
+      <strong>{{ customer.name }}</strong><br>
+      Email: {{ customer.email }}<br>
+      Phone: {{ customer.phone }}
+    </li>
+  </ul>
+</div>
