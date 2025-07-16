@@ -1,30 +1,82 @@
-﻿using StockManagement.Models;
-using StockManagement.Repositories;
+﻿using Microsoft.Extensions.Options;
+using StockManagement.CommonModels;
+using StockManagement.Interfaces.Repositories;
+using StockManagement.Interfaces.Services;
+using StockManagement.Models;
 
 namespace StockManagement.Services;
-public class ProductService
-{
-    private ProductRepository repository;
 
-    public ProductService()
+public class ProductService : IProductService
+{
+    private readonly IProductRepository _productRepository;
+    private readonly IUserService _userService;
+    private readonly MySettings _settings;
+
+    public ProductService(IProductRepository productRepository, IUserService userService, IOptions<MySettings> options)
     {
-        repository = new ProductRepository();
+        _productRepository = productRepository;
+        _userService = userService;
+        _settings = options.Value;
     }
 
-    public Product Create(Product product)
+    private void DisableDiscountIfSet(Product[] products)
     {
-        var createdProduct = repository.CreateProduct(product);
+        foreach (var item in products)
+        {
+            DisableDiscountIfSet(item);
+        }
+    }
 
+    private void DisableDiscountIfSet(Product product)
+    {
+        if (_settings.DiscountDisabled)
+        {
+            product.DiscountPercentage = null;
+        }
+    }
+
+    public async Task<Product[]> GetAsync()
+    {
+        var results = await _productRepository.GetAsync();
+
+        DisableDiscountIfSet(results);
+
+        return results;
+    }
+
+    public async Task<Product> GetAsync(int id)
+    {
+        var result = await _productRepository.GetAsync(id);
+
+        DisableDiscountIfSet(result);
+
+        return result;
+    }
+
+    public async Task<Product> CreateAsync(Product product)
+    {
+        var userIdFromToken = _userService.GetCurrentUser().Id;
+        product.UserId = userIdFromToken;
+
+        var createdProduct = await _productRepository.CreateAsync(product);
         return createdProduct;
     }
 
-    public Product[] GetAll()
+    public async Task DeleteAsync(int id)
     {
-        return repository.GetAll();
+        await _productRepository.DeleteAsync(id);
     }
 
-    public Product GetById(int id)
+    public async Task UpdateAsync(Product product)
     {
-        return null;
+        var dbModel = await _productRepository.GetAsync(product.Id);
+
+        dbModel.Name = product.Name;
+        dbModel.Description = product.Description;
+        dbModel.Price = product.Price;
+        dbModel.DiscountPercentage = product.DiscountPercentage;
+        dbModel.Stock = product.Stock;
+
+        await _productRepository.UpdateAsync(dbModel);
     }
 }

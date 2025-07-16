@@ -1,34 +1,35 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using StockManagement.DataContracts;
-using StockManagement.MockData;
 using StockManagement.Models;
-using StockManagement.Services;
+using StockManagement.Interfaces.Services;
 
 namespace StockManagement.Controllers;
 
+[Authorize]
 [Route("api/[controller]")]
 [ApiController]
 public class ProductController : ControllerBase
 {
-    [HttpGet]
-    public ActionResult<ProductViewModel[]> GetAll()
+    private readonly IProductService _productService;
+    public ProductController(IProductService productService)
     {
-        var service = new ProductService();
-        var products = service.GetAll();
+        _productService = productService;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<ProductViewModel[]>> GetAsync()
+    {
+        var products = await _productService.GetAsync();
         var viewModel = Mapper(products);
 
         return viewModel;
     }
 
     [HttpGet("{id}")]
-    public ActionResult<ProductViewModel> GetProduct(int id)
+    public async Task<ActionResult<ProductViewModel>> GetAsync(int id)
     {
-        var product = MockDataList.ProductList.Products.SingleOrDefault(x => x.Id == id);
-
-        if (id == 3) // 3 = verboden toegang //
-        {
-            return Unauthorized();
-        }
+        var product = await _productService.GetAsync(id);
 
         if (product != null)
         {
@@ -39,52 +40,80 @@ public class ProductController : ControllerBase
     }
 
     [HttpPost]
-    public ActionResult<ProductViewModel> Post([FromBody] CreateProductModel model)
+    public async Task<ActionResult<ProductViewModel>> PostAsync([FromBody] CreateProductModel model)
     {
-        var service = new ProductService();
+        try
+        {
+            var domainModel = Mapper(model);
+            var createdModel = await _productService.CreateAsync(domainModel);
+            var viewModel = Mapper(createdModel);
 
+            return Ok(viewModel);
+        }
+        catch (ArgumentNullException ex)
+        {
+            return BadRequest("Geen juiste waarde meegegeven");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest("Server fout");
+        }
+
+    }
+
+    [HttpPut]
+    public async Task<ActionResult> UpdateAsync([FromBody] UpdateProductModel model)
+    {
         var domainModel = Mapper(model);
-        var createdModel = service.Create(domainModel);
-        var viewModel = Mapper(createdModel);
+        await _productService.UpdateAsync(domainModel);
 
-        return Ok(viewModel);
+        return Ok();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> DeleteAsync(int id)
+    {
+        await _productService.DeleteAsync(id);
+        return Ok();
     }
 
     private ProductViewModel[] Mapper(Product[] model)
     {
         List<ProductViewModel> products = new();
-
         foreach (var product in model)
         {
-    var mappedObject = Mapper(product);
-    products.Add(mappedObject);
+            var mappedObject = Mapper(product);
+            products.Add(mappedObject);
         }
-
         return products.ToArray();
     }
 
-    private ProductViewModel Mapper(Product model)
+    private ProductViewModel Mapper(Product model) => new ProductViewModel()
     {
-        return new ProductViewModel()
-        {
-            Id = model.Id,
-            Name = model.Name,
-            Description = model.Description,
-            Price = model.Price,
-            Stock = model.Stock,
-            DiscountPercentage = model.DiscountPercentage
-        };
-    }
+        Id = model.Id,
+        Name = model.Name,
+        Description = model.Description,
+        Price = model.Price,
+        Stock = model.Stock,
+        DiscountPercentage = model.DiscountPercentage
+    };
 
-    private Product Mapper(CreateProductModel model)
+    private Product Mapper(CreateProductModel model) => new Product()
     {
-        return new Product()
-        {
-            Name = model.Name,
-            Description = model.Description,
-            Price = model.Price,
-            Stock = model.Stock,
-            DiscountPercentage = model.DiscountPercentage
-        };
-    }
+        Name = model.Name,
+        Description = model.Description,
+        Price = model.Price,
+        Stock = model.Stock,
+        DiscountPercentage = model.DiscountPercentage
+    };
+
+    private Product Mapper(UpdateProductModel model) => new Product()
+    {
+        Id = model.Id,
+        Name = model.Name,
+        Description = model.Description,
+        Price = model.Price,
+        Stock = model.Stock,
+        DiscountPercentage = model.DiscountPercentage
+    };
 }

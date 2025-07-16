@@ -1,5 +1,4 @@
-﻿using System.ComponentModel;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace StockManagement.Models;
 
@@ -11,7 +10,10 @@ public class Product
     public required decimal Price { get; set; }
     public required int Stock { get; set; }
     public int? DiscountPercentage { get; set; }
+    public int UserId { get; set; }
+    public User User { get; set; }
+
     [NotMapped]
-    public decimal CalculateDiscount =>
-        DiscountPercentage.HasValue ? ((1 - DiscountPercentage.Value / 100m)) : Price;
+    public decimal DiscountedPrice =>
+    DiscountPercentage.HasValue ? Price * (1 - (DiscountPercentage.Value / 100m)) : Price;
 }

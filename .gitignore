@@ -5,6 +5,10 @@ dist/
 .angular
 
 #=== Visual Studio /.net ===
-bin/
-obj/
+StockManagement/bin/
+StockManagement/bin\
+StockManagement/obj/
+StockManagement/obj\
+.vs/*
+StockManagement/.vs/*
 .vs

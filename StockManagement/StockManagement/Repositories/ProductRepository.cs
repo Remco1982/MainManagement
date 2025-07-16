@@ -1,31 +1,46 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using StockManagement.Interfaces.Repositories;
+using StockManagement.Interfaces.Services;
 using StockManagement.Models;
 
-namespace StockManagement.Repositories
+namespace StockManagement.Repositories;
+
+public class ProductRepository : IProductRepository
 {
-    public class ProductRepository
+    private readonly AppDbContext _context;
+    private readonly IUserService _userService;
+
+    public ProductRepository(AppDbContext context, IUserService userService)
     {
-        private readonly AppDbContext _context;
-        public ProductRepository()
-        {
-            var connectionstring = "Host=localhost;Port=5432;Database=StockDatabase;Username=postgres;Password=82Iekiek!";
-            var optionBuilder = new DbContextOptionsBuilder<AppDbContext>();
-            optionBuilder.UseNpgsql(connectionstring);
-            _context = new AppDbContext(optionBuilder.Options);
-        }
+        _context = context;
+        _userService = userService;
+    }
+    public async Task<Product[]> GetAsync()
+    {
+        var userId = _userService.GetCurrentUser().Id;
+        return await _context.Products.Where(x => x.UserId == userId).ToArrayAsync();
+    }
 
-        public Product CreateProduct(Product product)
-        {
-            _context.Products.Add(product);
-            _context.SaveChanges();
-            return product;
-        }
+    public async Task<Product> GetAsync(int id) => await _context.Products.SingleAsync(x => x.Id == id);
 
-        public Product[] GetAll()
-        {
-            return _context.Products.ToArray();
-        }
+    public async Task<Product> CreateAsync(Product product)
+    {
+        await _context.Products.AddAsync(product);
+        await _context.SaveChangesAsync();
 
+        return product;
+    }
+
+    public async Task UpdateAsync(Product product)
+    {
+        _context.Products.Update(product);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        var toBeDeleted = await GetAsync(id);
+        _context.Products.Remove(toBeDeleted);
+        await _context.SaveChangesAsync();
     }
 }
-
