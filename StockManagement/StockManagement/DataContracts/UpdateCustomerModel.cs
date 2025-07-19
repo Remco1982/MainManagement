@@ -1,6 +1,6 @@
 ﻿namespace StockManagement.DataContracts
 {
-    public class UpdateCostomerModel : CreateCustomerModel 
+    public class UpdateCustomerModel : CreateCustomerModel 
     {
         public required int Id { get; set; }
     }

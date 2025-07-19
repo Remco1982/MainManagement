@@ -50,15 +50,14 @@ public class ProductController : ControllerBase
 
             return Ok(viewModel);
         }
-        catch (ArgumentNullException ex)
+        catch (ArgumentNullException)
         {
             return BadRequest("Geen juiste waarde meegegeven");
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return BadRequest("Server fout");
         }
-
     }
 
     [HttpPut]

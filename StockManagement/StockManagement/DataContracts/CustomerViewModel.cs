@@ -1,4 +1,5 @@
-﻿namespace StockManagement.DataContracts;
+﻿
+namespace StockManagement.DataContracts;
 
 public class CustomerViewModel
 {
@@ -9,4 +10,9 @@ public class CustomerViewModel
     public required string PostalCode { get; set; }
 
     public required int AppartmentNumber { get; set; }
+
+    public static implicit operator CustomerViewModel(void v)
+    {
+        throw new NotImplementedException();
+    }
 }

@@ -8,6 +8,5 @@ public class CreateCustomerModel
     public required string PostalCode { get; set; }
 
     public required int AppartmentNumber { get; set; }
-
-
+    public object Id { get; internal set; }
 }
